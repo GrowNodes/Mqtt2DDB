@@ -24,8 +24,11 @@ MongoClient.connect(mongoUrl, function(err, db) {
       case "$localip":
       case "$fw/version":
       case "$stats/interval":
+        updateNodeInfo(db, nodeSerial, subTopic, message.toString() )
+      break
       case "$implementation/config":
         updateNodeInfo(db, nodeSerial, subTopic, message.toString() )
+        updateGrowPlan(db, nodeSerial, message.toString() )
         break
     }
 
@@ -33,7 +36,12 @@ MongoClient.connect(mongoUrl, function(err, db) {
 });
 
 
+var updateGrowPlan = function(db, serial, message) {
+      const growplan = JSON.parse(JSON.parse(message).settings.growplan)
+      const collection = db.collection('grow-plan')
 
+      upsertDB(collection, serial, growplan)
+}
 
 var updateNodeInfo = function(db, serial, subtopic, message) {
   var nodeInfo = new Object()
@@ -52,9 +60,6 @@ var updateNodeInfo = function(db, serial, subtopic, message) {
     case "$implementation/config":
       const config = JSON.parse(message)
       nodeInfo["wifi-ssid"] = config.wifi.ssid
-      
-      const growplan = JSON.parse(config.settings.growplan)
-      upsertDB(db.collection('grow-plan'), serial, growplan)
     break
   }
 
