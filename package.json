@@ -1,0 +1,19 @@
+{
+  "name": "iot-bridge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrowNodes/iot-bridge.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GrowNodes/iot-bridge/issues"
+  },
+  "homepage": "https://github.com/GrowNodes/iot-bridge#readme"
+}
