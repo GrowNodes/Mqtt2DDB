@@ -23,7 +23,7 @@ MongoClient.connect(mongoUrl, function(err, db) {
       case "$name":
       case "$localip":
       case "$fw/version":
-      case "$stats/interval":
+      case "$stats/signal":
         updateNodeInfo(db, nodeSerial, subTopic, message.toString() )
       break
       case "$implementation/config":
@@ -37,15 +37,27 @@ MongoClient.connect(mongoUrl, function(err, db) {
 
 
 var updateGrowPlan = function(db, serial, message) {
-      const growplan = JSON.parse(JSON.parse(message).settings.growplan)
-      const collection = db.collection('grow-plan')
+  const growplan = JSON.parse(JSON.parse(message).settings.growplan)
+  const collection = db.collection('grow-plan')
 
-      upsertDB(collection, serial, growplan)
+  collection.find({ serial: serial }).limit(1).sort({$natural:-1}).toArray(function(err, items) {
+    const lastGrowPlan = items[0]
+    if (lastGrowPlan && JSON.stringify(lastGrowPlan.plan) == JSON.stringify(growplan)) {
+      // Grow plan is up to date.
+    } else {
+      try {
+         collection.insertOne( {serial: serial, uploaded_at: (new Date).getTime(), plan: growplan } );
+      } catch (e) {
+         console.log(e);
+      };
+    }
+    
+  })
 }
 
 var updateNodeInfo = function(db, serial, subtopic, message) {
   var nodeInfo = new Object()
-  nodeInfo.lastseen = (new Date).getTime()
+  nodeInfo.last_seen = (new Date).getTime()
 
   switch (subtopic) {
     case "$name":
@@ -57,6 +69,9 @@ var updateNodeInfo = function(db, serial, subtopic, message) {
     case "$fw/version":
       nodeInfo.firmware = message
     break
+    case "$stats/signal":
+      nodeInfo["wifi-signal"] = message
+    break
     case "$implementation/config":
       const config = JSON.parse(message)
       nodeInfo["wifi-ssid"] = config.wifi.ssid
@@ -65,9 +80,6 @@ var updateNodeInfo = function(db, serial, subtopic, message) {
 
   upsertDB(db.collection('node-info'), serial, nodeInfo)
 }
-
-
-
 
 
 
