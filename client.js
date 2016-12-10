@@ -1,51 +1,33 @@
-const express = require('express')
-const app = express()
-
-
+const uuidV4 = require('uuid/v4');
 var mqtt=require('mqtt')  
-var mongodb=require('mongodb');  
+
+var ddb = require('dynamodb').ddb({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  endpoint: 'dynamodb.us-west-1.amazonaws.com'
+});
 
 
-var mongodbClient=mongodb.MongoClient;  
-const mongodbURI = 'mongodb://root:a3UoemqXt2fy@ds157987.mlab.com:57987/grownodes';
 var deviceRoot="nodes/"  
-var collection,client;  
 
-mongodbClient.connect(mongodbURI,setupCollection);
-
-function setupCollection(err,db) {  
-  if(err) throw err;
-  collection=db.collection("test_mqtt");
-  client=mqtt.connect('mqtt://demo.grownodes.com')
-  client.subscribe(deviceRoot+"#")
-  client.on('message', insertEvent);
-
-  app.listen(process.env.PORT || 3000, () => {
-    console.log('listening on', process.env.PORT || 3000)
-  })
-
-}
-
+var mqttClient=mqtt.connect('mqtt://demo.grownodes.com')
+mqttClient.subscribe(deviceRoot+"#")
+mqttClient.on('message', insertEvent);
 
 function insertEvent(topic,payload) {  
   // console.log("new msg", topic, payload.toString())
-  var key=topic.replace(deviceRoot,'');
-  collection.update(  
-  { _id:key },
-  { $push: { events: { message:payload.toString(), when:new Date() } } },
-  { upsert:true },
-  function(err,docs) {
-    if(err) { console.log("Insert fail"); } // Improve error handling
+  const topic_without_root = topic.replace(deviceRoot,'')
+  var node_serial = topic_without_root.split('/')[0];
+  var sub_topic = topic_without_root.substring(topic_without_root.indexOf("/") + 1);
+  console.log(node_serial, sub_topic)
+  var item = {
+    message_id: uuidV4(),
+    timestamp: Date.now(),
+    node_serial,
+    sub_topic,
+    body: payload.toString()
+
   }
-  )
+  ddb.putItem('mqtt_log', item, {}, function(err, res, cap) {});
+
 }
-
-
-
-
-app.get('/*', (req, res) => {
-  collection.findOne({_id: req.params[0]}, (err, result) => {
-    if (err) return console.log(err)
-    res.send(result || {})
-  })
-})
