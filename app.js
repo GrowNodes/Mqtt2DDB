@@ -4,7 +4,7 @@ var mqtt=require('mqtt')
 var ddb = require('dynamodb').ddb({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  endpoint: 'dynamodb.us-west-1.amazonaws.com'
+  endpoint: 'dynamodb.us-east-1.amazonaws.com'
 });
 
 
