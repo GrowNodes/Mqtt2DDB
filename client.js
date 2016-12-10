@@ -1,3 +1,7 @@
+const express = require('express')
+const app = express()
+
+
 var mqtt=require('mqtt')  
 var mongodb=require('mongodb');  
 
@@ -15,6 +19,11 @@ function setupCollection(err,db) {
   client=mqtt.connect('mqtt://demo.grownodes.com')
   client.subscribe(deviceRoot+"#")
   client.on('message', insertEvent);
+
+  app.listen(process.env.PORT || 3000, () => {
+    console.log('listening on', process.env.PORT || 3000)
+  })
+
 }
 
 
@@ -30,3 +39,13 @@ function insertEvent(topic,payload) {
   }
   )
 }
+
+
+
+
+app.get('/*', (req, res) => {
+  collection.findOne({_id: req.params[0]}, (err, result) => {
+    if (err) return console.log(err)
+    res.send(result || {})
+  })
+})
