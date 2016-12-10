@@ -13,17 +13,17 @@ function setupCollection(err,db) {
   if(err) throw err;
   collection=db.collection("test_mqtt");
   client=mqtt.connect('mqtt://demo.grownodes.com')
-  client.subscribe(deviceRoot+"+")
+  client.subscribe(deviceRoot+"#")
   client.on('message', insertEvent);
 }
 
 
 function insertEvent(topic,payload) {  
-  console.log("new msg", topic, payload.toString())
+  // console.log("new msg", topic, payload.toString())
   var key=topic.replace(deviceRoot,'');
   collection.update(  
   { _id:key },
-  { $push: { events: { event: { value:payload.toString(), when:new Date() } } } },
+  { $push: { events: { message:payload.toString(), when:new Date() } } },
   { upsert:true },
   function(err,docs) {
     if(err) { console.log("Insert fail"); } // Improve error handling
