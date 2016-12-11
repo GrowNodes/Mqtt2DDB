@@ -17,14 +17,13 @@ mqttClient.on('message', insertEvent);
 function insertEvent(topic,payload) {  
   // console.log("new msg", topic, payload.toString())
   const topic_without_root = topic.replace(deviceRoot,'')
-  var node_serial = topic_without_root.split('/')[0];
-  var sub_topic = topic_without_root.substring(topic_without_root.indexOf("/") + 1);
-  console.log(node_serial, sub_topic)
+  // var node_serial = topic_without_root.split('/')[0];
+  // var sub_topic = topic_without_root.substring(topic_without_root.indexOf("/") + 1);
+  console.log(topic_without_root)
   var item = {
     message_id: uuidV4(),
     timestamp: Date.now(),
-    node_serial,
-    sub_topic,
+    topic: topic_without_root,
     body: payload.toString()
 
   }
